@@ -1,6 +1,6 @@
 //import liraries
 import React, { Component } from 'react';
-import { Image, View, Text, StyleSheet } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableHighlight } from 'react-native';
 
 // create a component
 class MovieCard extends Component {
@@ -10,10 +10,12 @@ class MovieCard extends Component {
         };
 
         return (
-            <View>
-                <Image style={{width:300, height: 150}} source={img} />
-                <Text>{this.props.title}</Text>
-            </View>
+            <TouchableHighlight onPress={this.props.loadProfile}>
+                <View>
+                    <Image style={{width:300, height: 150}} source={img} />
+                    <Text>{this.props.title}</Text>
+                </View>
+            </TouchableHighlight>
         );
     }
 }

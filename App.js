@@ -1,23 +1,35 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import MovieList from "./MovieList.js";
+import MovieProfile from "./MovieProfile.js";
+import { StackNavigator } from "react-navigation";
 
 const apiKey = '9710505071f8a3028ae8d5341ecf2f53';
+
+const Routes = StackNavigator({
+  MovieList: {screen: MovieList},
+  MovieProfile: {screen: MovieProfile, navigationOptions: ({navigation}) => ({
+    title: `${navigation.state.params.title}`
+  })}
+});
 
 export default class App extends React.Component {
   constructor(props) {
     super(props);
+    this.fetchWithPage = this.fetchWithPage.bind(this);
+    this.loadMore = this.loadMore.bind(this);
     this.state = {
       movies: [],
-      loading: false 
+      loading: false,
+      page: 1
     } 
   }
 
-  componentWillMount(props) {
+  fetchWithPage(page) {
     this.setState({
       loading: true
     }, () => {
-      fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}`)
+      fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}&page=${page}`)
         .then((data) => data.json())
         .then((json) =>{
           return new Promise((resolve, reject) => {
@@ -27,19 +39,38 @@ export default class App extends React.Component {
           });
         })
         .then((json) => {
+          const mSet = new Set([...this.state.movies.map((m) => m.id)]);
+          const plusSet = json.results.filter((m) => !mSet.has(m.id));
+          const newResults = this.state.movies.concat(plusSet);
           this.setState ({
-            movies: json.results,
+            movies: newResults,
             loading: false
           });
         })
     }); 
   }
   
+  loadMore() {
+    const newPage = this.state.page + 1;
+    this.setState({
+      page: newPage
+    }, () => this.fetchWithPage(newPage));
+      
+  }
+  
+  componentWillMount(props) {
+    this.fetchWithPage(1);
+  }
+  
   render() {
-    return ( 
-      <MovieList 
-        movies={this.state.movies} 
-        loading={this.state.loading}/>
+    return (
+
+      <Routes screenProps={{
+        movies: this.state.movies,
+        loadMore: this.loadMore,
+        loading: this.state.loading
+      }} />
+        
     );
   }
 }
