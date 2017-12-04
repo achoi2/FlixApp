@@ -4,13 +4,17 @@ import MovieList from "./MovieList.js";
 import MovieProfile from "./MovieProfile.js";
 import { StackNavigator } from "react-navigation";
 
-const apiKey = '9710505071f8a3028ae8d5341ecf2f53';
+
+const apiKey = "9710505071f8a3028ae8d5341ecf2f53";
 
 const Routes = StackNavigator({
-  MovieList: {screen: MovieList},
-  MovieProfile: {screen: MovieProfile, navigationOptions: ({navigation}) => ({
-    title: `${navigation.state.params.title}`
-  })}
+  MovieList: { screen: MovieList },
+  MovieProfile: {
+    screen: MovieProfile,
+    navigationOptions: ({ navigation }) => ({
+      title: `${navigation.state.params.title}`
+    })
+  }
 });
 
 export default class App extends React.Component {
@@ -22,55 +26,66 @@ export default class App extends React.Component {
       movies: [],
       loading: false,
       page: 1
-    } 
+    };
   }
 
   fetchWithPage(page) {
-    this.setState({
-      loading: true
-    }, () => {
-      fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}&page=${page}`)
-        .then((data) => data.json())
-        .then((json) =>{
-          return new Promise((resolve, reject) => {
-            setTimeout(() => {
-              resolve(json);
-            }, 2000);
-          });
-        })
-        .then((json) => {
-          const mSet = new Set([...this.state.movies.map((m) => m.id)]);
-          const plusSet = json.results.filter((m) => !mSet.has(m.id));
-          const newResults = this.state.movies.concat(plusSet);
-          this.setState ({
-            movies: newResults,
-            loading: false
-          });
-        })
-    }); 
+    this.setState(
+      {
+        loading: true
+      },
+      () => {
+        fetch(
+          `https://api.themoviedb.org/3/movie/now_playing?api_key=${
+            apiKey
+          }&page=${page}`
+        )
+          .then(data => data.json())
+          .then(json => {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                resolve(json);
+              }, 2000);
+            });
+          })
+          .then(json => {
+            const mSet = new Set([...this.state.movies.map(m => m.id)]);
+            const plusSet = json.results.filter(m => !mSet.has(m.id));
+            const newResults = this.state.movies.concat(plusSet);
+            this.setState({
+              movies: newResults,
+              loading: false
+            });
+          })
+          .then(error => console.log('network error')
+        );
+      }
+    );
   }
-  
+
   loadMore() {
     const newPage = this.state.page + 1;
-    this.setState({
-      page: newPage
-    }, () => this.fetchWithPage(newPage));
-      
+    this.setState(
+      {
+        page: newPage
+      },
+      () => this.fetchWithPage(newPage)
+    );
   }
-  
+
   componentWillMount(props) {
     this.fetchWithPage(1);
   }
-  
+
   render() {
     return (
-
-      <Routes screenProps={{
-        movies: this.state.movies,
-        loadMore: this.loadMore,
-        loading: this.state.loading
-      }} />
-        
+      <Routes
+        screenProps={{
+          movies: this.state.movies,
+          loadMore: this.loadMore,
+          loading: this.state.loading
+        }}
+      />
     );
   }
 }
@@ -81,5 +96,5 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center"
-  },
+  }
 });
